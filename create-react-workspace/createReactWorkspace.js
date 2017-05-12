@@ -44,6 +44,7 @@ const path = require('path');
 const execSync = require('child_process').execSync;
 const spawn = require('cross-spawn');
 const semver = require('semver');
+const changeCase = require('change-case');
 const dns = require('dns');
 const tmp = require('tmp');
 const unpack = require('tar-pack').unpack;
@@ -135,7 +136,6 @@ function createApp(name, verbose, version, template) {
   const root = path.resolve(name);
   const workspaceName = path.basename(root);
 
-  checkAppName(workspaceName);
   fs.ensureDirSync(name);
   if (!isSafeToCreateProjectIn(root)) {
     console.log(
@@ -439,34 +439,6 @@ function checkNodeVersion(packageName) {
       ),
       process.version,
       packageJson.engines.node
-    );
-    process.exit(1);
-  }
-}
-
-function checkAppName(workspaceName) {
-  const validationResult = validateProjectName(workspaceName);
-  if (!validationResult.validForNewPackages) {
-    console.error(
-      `Could not create a project called ${chalk.red(`"${workspaceName}"`)} because of npm naming restrictions:`
-    );
-    printValidationResults(validationResult.errors);
-    printValidationResults(validationResult.warnings);
-    process.exit(1);
-  }
-
-  // TODO: there should be a single place that holds the dependencies
-  const dependencies = [];
-  const devDependencies = ['react-workspace-scripts'];
-  const allDependencies = dependencies.concat(devDependencies).sort();
-  if (allDependencies.indexOf(workspaceName) >= 0) {
-    console.error(
-      chalk.red(
-        `We cannot create a project called ${chalk.green(workspaceName)} because a dependency with the same name exists.\n` +
-          `Due to the way npm works, the following names are not allowed:\n\n`
-      ) +
-        chalk.cyan(allDependencies.map(depName => `  ${depName}`).join('\n')) +
-        chalk.red('\n\nPlease choose a different project name.')
     );
     process.exit(1);
   }
